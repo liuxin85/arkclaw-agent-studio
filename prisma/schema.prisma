@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AgentRunStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
+enum RunEventType {
+  PLAN
+  RETRIEVAL
+  SKILL_CALL
+  MODEL_CALL
+  ERROR
+  FINAL
+}
+
+model Agent {
+  id           String     @id @default(cuid())
+  name         String
+  description  String?
+  systemPrompt String
+  model        String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  runs         AgentRun[]
+}
+
+model KnowledgeBase {
+  id          String              @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  documents   KnowledgeDocument[]
+}
+
+model KnowledgeDocument {
+  id              String          @id @default(cuid())
+  knowledgeBaseId String
+  name            String
+  mimeType        String
+  content         String
+  createdAt       DateTime        @default(now())
+  knowledgeBase   KnowledgeBase   @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  chunks          DocumentChunk[]
+}
+
+model DocumentChunk {
+  id         String            @id @default(cuid())
+  documentId String
+  index      Int
+  content    String
+  metadata   Json?
+  createdAt  DateTime          @default(now())
+  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, index])
+}
+
+model Skill {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String
+  inputSchema  Json
+  outputSchema Json
+  timeoutMs    Int
+  enabled      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AgentRun {
+  id        String         @id @default(cuid())
+  agentId   String
+  task      String
+  status    AgentRunStatus @default(QUEUED)
+  result    String?
+  startedAt DateTime?
+  endedAt   DateTime?
+  createdAt DateTime       @default(now())
+  agent     Agent          @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  events    RunEvent[]
+}
+
+model RunEvent {
+  id        String       @id @default(cuid())
+  runId     String
+  type      RunEventType
+  title     String
+  status    String
+  payload   Json
+  duration  Int?
+  createdAt DateTime     @default(now())
+  run       AgentRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+}
