@@ -7,9 +7,13 @@ export type RunEventType =
   | "skill.completed"
   | "report.completed";
 
+export type PersistedAgentRunEventType = "PLAN" | "RETRIEVAL" | "SKILL_CALL" | "MODEL_CALL" | "ERROR" | "FINAL";
+
 export type AgentRunEvent = {
   id: string;
+  runId?: string;
   type: RunEventType;
+  persistedType: PersistedAgentRunEventType;
   title: string;
   description: string;
   status: RunEventStatus;

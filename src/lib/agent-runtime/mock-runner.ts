@@ -19,6 +19,7 @@ export async function* runMockAgent(task: string): AsyncGenerator<AgentRunEvent>
   const events: Array<Omit<AgentRunEvent, "id" | "createdAt">> = [
     {
       type: "run.created",
+      persistedType: "PLAN",
       title: "Run created",
       description: "The task was accepted by the Agent runtime.",
       status: "queued",
@@ -30,6 +31,7 @@ export async function* runMockAgent(task: string): AsyncGenerator<AgentRunEvent>
     },
     {
       type: "plan.created",
+      persistedType: "PLAN",
       title: "Planning",
       description: "Generated a structured execution plan for the requested report.",
       status: "completed",
@@ -45,6 +47,7 @@ export async function* runMockAgent(task: string): AsyncGenerator<AgentRunEvent>
     },
     {
       type: "retrieval.completed",
+      persistedType: "RETRIEVAL",
       title: "Knowledge retrieval",
       description: "Matched internal notes that explain Agent observability requirements.",
       status: "completed",
@@ -67,6 +70,7 @@ export async function* runMockAgent(task: string): AsyncGenerator<AgentRunEvent>
     },
     {
       type: "skill.completed",
+      persistedType: "SKILL_CALL",
       title: "Skill call",
       description: "Executed the web.fetch Skill contract with a mocked result.",
       status: "completed",
@@ -84,6 +88,7 @@ export async function* runMockAgent(task: string): AsyncGenerator<AgentRunEvent>
     },
     {
       type: "report.completed",
+      persistedType: "FINAL",
       title: "Final report",
       description: "Generated the final answer from planning, retrieval, and Skill evidence.",
       status: "completed",

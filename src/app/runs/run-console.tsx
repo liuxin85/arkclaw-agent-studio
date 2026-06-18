@@ -46,6 +46,7 @@ function RuntimeIcon({ status }: Readonly<{ status: RunStatus }>) {
 export function RunConsole() {
   const [task, setTask] = useState(defaultTask);
   const [events, setEvents] = useState<AgentRunEvent[]>([]);
+  const [runId, setRunId] = useState<string | null>(null);
   const [status, setStatus] = useState<RunStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const sourceRef = useRef<EventSource | null>(null);
@@ -54,6 +55,7 @@ export function RunConsole() {
     sourceRef.current?.close();
     sourceRef.current = null;
     setEvents([]);
+    setRunId(null);
     setStatus("idle");
     setError(null);
   }
@@ -61,6 +63,7 @@ export function RunConsole() {
   function startRun() {
     sourceRef.current?.close();
     setEvents([]);
+    setRunId(null);
     setError(null);
     setStatus("running");
 
@@ -69,10 +72,17 @@ export function RunConsole() {
 
     source.addEventListener("run-event", (message) => {
       const event = JSON.parse(message.data) as AgentRunEvent;
+      if (event.runId) {
+        setRunId(event.runId);
+      }
       setEvents((currentEvents) => [...currentEvents, event]);
     });
 
-    source.addEventListener("run-complete", () => {
+    source.addEventListener("run-complete", (message) => {
+      const payload = JSON.parse(message.data) as { runId?: string };
+      if (payload.runId) {
+        setRunId(payload.runId);
+      }
       setStatus("completed");
       source.close();
       sourceRef.current = null;
@@ -131,6 +141,12 @@ export function RunConsole() {
         {error ? (
           <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
+          </div>
+        ) : null}
+        {runId ? (
+          <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+            <p className="text-xs font-medium text-slate-500">Persisted run</p>
+            <p className="mt-1 font-mono text-xs text-slate-700">{runId}</p>
           </div>
         ) : null}
       </section>
